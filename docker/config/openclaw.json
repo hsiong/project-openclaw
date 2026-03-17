@@ -1,0 +1,146 @@
+{
+  "models": {
+    "providers": {
+      "volc_glm": {
+        "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
+        "apiKey": { "source": "file", "provider": "filemain", "id": "/volc-glm/apiKey" },
+        "api": "openai-responses",
+        "models": [
+          {
+            "id": "glm-4-7-251222",
+            "name": "GLM-4"
+          }
+        ]
+      },
+      "glm": {
+        "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
+        "apiKey": { "source": "file", "provider": "filemain", "id": "/glm/apiKey" },
+        "api": "openai-completions",
+        "models": [
+          { "id": "glm-4.7", "name": "Zhipu GLM-4.7" }
+        ]
+      },
+      "kimi": {
+        "baseUrl": "https://api.moonshot.cn/v1",
+        "apiKey": { "source": "file", "provider": "filemain", "id": "/kimi/apiKey" },
+        "api": "openai-completions",
+        "models": [
+          { "id": "kimi-k2.5", "name": "Kimi K2.5" }
+        ]
+      },
+      "tongyi": {
+        "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "apiKey": { "source": "file", "provider": "filemain", "id": "/tongyi/apiKey" },
+        "api": "openai-completions",
+        "models": [
+          { "id": "kimi/kimi-k2.5", "name": "Tongyi Kimi K2.5" }
+        ]
+      }
+    }
+  },
+  "gateway": {
+    "mode": "local",
+    "port": 18789,
+    "bind": "loopback",
+    "auth": {
+      "mode": "token",
+      "token": { "source": "file", "provider": "filemain", "id": "/gateway/token" }
+    }
+  },
+  "secrets": {
+    "providers": {
+      "filemain": {
+        "source": "file",
+        "path": "~/.openclaw/secrets.json",
+        "mode": "json"
+      }
+    },
+    "defaults": {
+      "file": "filemain"
+    }
+  },
+  "agents": {
+    "defaults": {
+
+      "model": {
+        "primary": "glm/glm-4.7",
+        "fallbacks": [
+          "volc_glm/glm-4-7-251222",
+          "kimi/kimi-k2.5",
+          "tongyi/kimi/kimi-k2.5"
+        ]
+      },
+      "models": {
+        "glm/glm-4.6v": { "alias": "glm" },
+        "volc_glm/glm-4-7-251222": { "alias": "volc_glm" },
+        "kimi/kimi-k2.5": { "alias": "kimi" },
+        "tongyi/kimi/kimi-k2.5": { "alias": "tongyi-kimi" }
+      },
+      "workspace": "~/.openclaw/workspace",
+      "sandbox": {
+        "mode": "all",
+        "scope": "session",
+        "workspaceAccess": "none",
+        "docker": {
+          "image": "ccr.ccs.tencentyun.com/openclaw-jf/openclaw-sandbox:2026.3.12",
+          "workdir": "/workspace",
+          "readOnlyRoot": true,
+          "tmpfs": ["/tmp", "/var/tmp", "/run"],
+          "network": "none",
+          "user": "1000:1000",
+          "capDrop": ["ALL"],
+          "pidsLimit": 256,
+          "memory": "1g",
+          "memorySwap": "2g",
+          "cpus": 1,
+          "env": {
+            "LANG": "C.UTF-8"
+          }
+        },
+        "browser": {
+          "enabled": true,
+          "image": "ccr.ccs.tencentyun.com/openclaw-jf/openclaw-sandbox-browser:2026.3.12",
+          "allowHostControl": false
+        }
+      }
+    }
+  },
+  "tools": {
+    "profile": "full",
+    "allow": [
+      "group:runtime",
+      "group:fs",
+      "group:sessions",
+      "group:ui",
+      "group:automation",
+      "group:nodes"
+    ],
+    "sandbox": {
+      "tools": {
+        "allow": [
+          "group:runtime",
+          "group:fs",
+          "group:sessions",
+          "group:ui",
+          "group:automation",
+          "group:nodes"
+        ]
+      }
+    },
+    "elevated": {
+      "enabled": false
+    },
+    "loopDetection": {
+      "enabled": true,
+      "historySize": 30,
+      "warningThreshold": 10,
+      "criticalThreshold": 20,
+      "globalCircuitBreakerThreshold": 30,
+      "detectors": {
+        "genericRepeat": true,
+        "knownPollNoProgress": true,
+        "pingPong": true
+      }
+    }
+  }
+}
