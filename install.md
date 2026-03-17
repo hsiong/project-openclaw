@@ -1,23 +1,66 @@
+## 1️⃣ OpenClaw 模型排行榜（社区投票）
+
+👉
+[OpenClaw 模型排行榜 (community leaderboard)](https://pricepertoken.com/leaderboards/openclaw?utm_source=chatgpt.com)
+
+这个页面就是 **专门给 OpenClaw 选模型的榜单**。
+特点：
+
+- 按 **Agent 使用效果** 排名
+- 用户投票 + 实际使用反馈
+- 同时显示 **价格 / token 成本**
+
+榜单里的常见高排名模型一般包括：
+
+- Claude 系列
+- GPT-4o / GPT 系列
+- DeepSeek 系列
+- Gemini 系列
+
+这个榜单的目标就是：
+**找“最适合 OpenClaw agent”的模型，而不是普通聊天能力。** 
+
+------
+
+## 2️⃣ OpenClaw 相关模型使用统计
+
+👉
+[OpenRouter LLM 使用排行榜](https://openrouter.ai/rankings?utm_source=chatgpt.com)
+
+这里是 **真实开发者调用量排行榜**，很多 OpenClaw 用户也参考这个来选模型。 
+
+------
+
+## 3️⃣ 开源模型排行榜（本地部署）
+
+如果你是 **Ollama / 本地 OpenClaw**：
+
+👉
+[HuggingFace Open LLM Leaderboard](https://huggingface.co/open-llm-leaderboard?utm_source=chatgpt.com)
+
+这是目前 **最大的开源模型排名榜单**，评测多种任务。 
+
+
+
+kimi: 15块钱
+
+glm: 500w token
+
+字节: 50w token
+
+tongyi: 1000w token
+
+
+
 # 第一步（外网机器执行）
 
 目标：把 OpenClaw 官方 Docker 镜像下载下来并导出。
 
-拉取官方镜像：
-
-```
-docker pull ghcr.io/openclaw/openclaw:2026.3.11
-```
-
 
 
 ```
-docker login ccr.ccs.tencentyun.com --username=100030931965
-docker tag ghcr.io/openclaw/openclaw:2026.3.11 ccr.ccs.tencentyun.com/openclaw-jf/openclaw:2026.3.11
-# 删除tag docker rmi ccr.ccs.tencentyun.com/openclaw-jf/openclaw:2026.03.11
-docker push ccr.ccs.tencentyun.com/openclaw-jf/openclaw:2026.3.11
+sh openclaw-push.sh
 ```
-
-
 
 
 
@@ -31,100 +74,168 @@ docker push ccr.ccs.tencentyun.com/openclaw-jf/openclaw:2026.3.11
 cd /home/ubuntu/backend/openclaw
 ```
 
-```
-docker login ccr.ccs.tencentyun.com --username=100030931965
-docker pull ccr.ccs.tencentyun.com/openclaw-jf/openclaw:2026.3.11
-```
-
 ------
 
-# 第五步（创建运行目录）
+# 第五步
+
+你关心的是两件事：
+
+- **token 不要被 bash/process 看到**
+- **browser 不要碰你内网**
+
+所以这版配置的关键点是：
+
+- `sandbox.mode: "all"`：所有会话都进 sandbox。
+- `scope: "session"`：每个会话一个容器，隔离最强。
+- `workspaceAccess: "none"`：不把宿主机工作区映射进 sandbox。
+- `docker.network: "none"`：`exec/bash/process/fs` 这批工具没网络。
+- `browser.allowHostControl: false`：不允许沙箱会话接管宿主机浏览器。
+- `elevated.enabled: false`：彻底关掉从 sandbox 跳回宿主机执行 `exec` 的逃生口。
+- token 用 **文件型 SecretRef**，不再明文写进 `openclaw.json`。官方支持 `file` provider。
+
+
+
+### 1）新建 `config/secrets.json`
+
+已知
+
+```
+# 火山
+ curl --location 'https://ark.cn-beijing.volces.com/api/v3/responses' \
+--header "Authorization: Bearer $ARK_API_KEY" \
+--header 'Content-Type: application/json' \
+--data '{
+    "model": "glm-4-7-251222",
+    "stream": true,
+    "tools": [
+        {
+            "type": "web_search",
+            "max_keyword": 3
+        }
+    ],
+    "input": [
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "input_text",
+                    "text": "今天有什么热点新闻"
+                }
+            ]
+        }
+    ]
+}'    
+
+# 智谱
+curl -X POST "https://open.bigmodel.cn/api/paas/v4/chat/completions" \
+    -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${auth}" \
+    -d '{
+        "model": "glm-4.7",
+        "messages": [
+        {
+            "role": "user",
+            "content": "作为一名营销专家，请为我的产品创作一个吸引人的口号"
+        },
+        {
+            "role": "assistant",
+            "content": "当然，要创作一个吸引人的口号，请告诉我一些关于您产品的信息"
+        },
+        {
+            "role": "user",
+            "content": "智谱AI 开放平台"
+        }
+        ],
+        "thinking": {
+            "type": "disabled"
+        },
+        "max_tokens": 65536,
+        "temperature": 1.0
+    }'
+  
+  # kimi
+  curl https://api.moonshot.cn/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $MOONSHOT_API_KEY" \
+    -d '{
+        "model": "kimi-k2-turbo-preview",
+        "messages": [
+            {"role": "system", "content": "你是 Kimi，由 Moonshot AI 提供的人工智能助手，你更擅长中文和英文的对话。你会为用户提供安全，有帮助，准确的回答。同时，你会拒绝一切涉及恐怖主义，种族歧视，黄色暴力等问题的回答。Moonshot AI 为专有名词，不可翻译成其他语言。"},
+            {"role": "user", "content": "你好，我叫李雷，1+1等于多少？"}
+        ],
+        "temperature": 0.6
+   }'
+   
+   
+   # tongyi - kimi
+   curl --location 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions' \
+--header "Authorization: Bearer $DASHSCOPE_API_KEY" \
+--header 'Content-Type: application/json' \
+--data '{
+    "model": "kimi/kimi-k2.5",
+    "messages":[
+        {
+            "role": "system",
+            "content": "You are a helpful assistant."
+        },
+        {
+            "role": "user",
+            "content": "你是谁"
+        }
+    ],
+    "enable_thinking": true
+}'
+```
+
+
+
+
+
+```
+vim /home/ubuntu/backend/openclaw/config/secrets.json
+```
+
+```
+参考 config/secrets.json
+```
+
+
+
+
+
+
+
+```
+chmod 600 /home/ubuntu/backend/openclaw/config/secrets.json
+sudo chown 1000:1000 /home/ubuntu/backend/openclaw/config/secrets.json
+```
+
+
 
 ```
 cd /home/ubuntu/backend/openclaw
 mkdir config node logs
-vim config/openclaw.json  
 sudo chown -R 1000:1000 /home/ubuntu/backend/openclaw/config /home/ubuntu/backend/openclaw/logs
+vim config/openclaw.json  
 
 ```
 
 ------
 
 ```
-{
-  gateway: {
-    mode: "local",
-    port: 18789,
-    bind: "loopback",
-    auth: {
-      mode: "token",
-      token: "k3KL0I53QSgtIlik-XWS98-TJHBGmyaX8iscnOBPWvM"
-    }
-  },
-
-  agents: {
-    defaults: {
-      workspace: "~/.openclaw/workspace"
-    }
-  },
-
-  tools: {
-    profile: "minimal",
-    deny: [
-      "group:runtime",
-      "group:fs",
-      "group:automation",
-      "browser",
-      "canvas",
-      "nodes"
-    ],
-    elevated: {
-      enabled: false
-    },
-    loopDetection: {
-      enabled: true,
-      historySize: 30,
-      warningThreshold: 10,
-      criticalThreshold: 20,
-      globalCircuitBreakerThreshold: 30,
-      detectors: {
-        genericRepeat: true,
-        knownPollNoProgress: true,
-        pingPong: true
-      }
-    }
-  }
-}
-
+参考 config/openclaw.json
 ```
 
 
 
-# 
+
 
 # 第七步（启动 OpenClaw）
 
 直接运行容器：
 
 ```
-docker rm -f openclaw
-
-docker run -d \
---name openclaw \
---restart unless-stopped \
---network host \
--v /home/ubuntu/backend/openclaw/config:/home/node/.openclaw \
--v /home/ubuntu/backend/openclaw/logs:/var/log/openclaw \
-ccr.ccs.tencentyun.com/openclaw-jf/openclaw:2026.3.11
-
-# 端口应该在 openclaw.json 里配置
-
-# 确实需要保留缓存
-# -v /home/ubuntu/backend/openclaw/node:/home/node \
-
-docker logs --tail 100 openclaw
-curl -fsS http://127.0.0.1:18789/healthz
-curl -fsS http://127.0.0.1:18789/readyz
+sh  openclaw-start.sh
 ```
 
 ------
@@ -132,7 +243,11 @@ curl -fsS http://127.0.0.1:18789/readyz
 
 
 ```
-://127.0.0.1:18791/ (auth=token)
+docker logs --tail 100 openclaw
+curl -fsS http://127.0.0.1:18789/healthz
+curl -fsS http://127.0.0.1:18789/readyz
+
+
 ubuntu:config/ $ curl -fsS http://127.0.0.1:18789/healthz            [16:08:26]
 {"ok":true,"status":"live"}%                                                    ubuntu:config/ $ curl -fsS http://127.0.0.1:18789/readyz             [16:08:32]
 {"ready":true,"failing":[],"uptimeMs":36161}%                                   ubuntu:config/ $                                     
@@ -140,13 +255,10 @@ ubuntu:config/ $ curl -fsS http://127.0.0.1:18789/healthz            [16:08:26]
 
 
 
+`openclaw models status` 会显示默认模型和 fallback；`--probe` 会真的去做认证探测，可能消耗 token。这个就是官方推荐的检查方式。
 
+```
+docker exec -it openclaw openclaw models status
+docker exec -it openclaw openclaw models status --probe
+```
 
-# 安全增强
-
-关于你前面贴的那段“`mode: all` + `openclaw-sandbox:bookworm-slim`”，我的建议是：
-
-**现在先不要加。**
-因为一旦你要在“容器里的 gateway”上再启 Docker sandbox，官方文档要求对应的 sandbox 镜像要先构建好，而且非本地 `OPENCLAW_IMAGE` 还要保证镜像里有 Docker CLI 支持；同时 `docker.sock` 挂载本身就是明显的安全风险。官方还写明了：默认 `network: "none"`、`workspaceAccess: "none"`、`docker.network: "host"` 被阻止，`mode` 可以是 `off / non-main / all`。这些都说明 sandbox 是第二阶段能力，不是你现在这套手工 `docker run` 最该先上的东西。
-
-**先别在这一步开 sandbox**。官方 Docker 文档说 Docker 网关启用 sandbox 需要额外的 `docker-setup.sh` 路径、Docker CLI 支持，必要时还会处理 `docker.sock`；而官方安全文档又反复强调最小权限和谨慎对待额外挂载。对你现在这个阶段，先让 gateway 稳定起来更重要。
