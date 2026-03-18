@@ -35,6 +35,55 @@
         "models": [
           { "id": "kimi/kimi-k2.5", "name": "Tongyi Kimi K2.5" }
         ]
+      },
+      "ollama": {
+        "baseUrl": "http://127.0.0.1:11434",
+        "apiKey": "ollama-local",
+        "api": "ollama",
+        "models": [
+          {
+            "id": "moonlight16b:0317",
+            "name": "Moonlight 16B",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 8192,
+            "maxTokens": 8192
+          },
+          {
+            "id": "qwen3:14b-q4_K_M",
+            "name": "Qwen 3 14B",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 40960,
+            "maxTokens": 10240
+          },
+          {
+            "id": "qwen3.5:9b",
+            "name": "Qwen 3.5 9B",
+            "reasoning": false,
+            "input": ["text", "image"],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 262144,
+            "maxTokens": 10240
+          }
+        ]
       }
     }
   },
@@ -61,21 +110,19 @@
   },
   "agents": {
     "defaults": {
-
+      "imageModel": { "primary": "ollama/qwen3.5:9b" },
       "model": {
-        "primary": "glm/glm-4.7",
+        "primary":  "ollama/qwen3:14b-q4_K_M",
         "fallbacks": [
+          "ollama/qwen3.5:9b",
+          "ollama/moonlight16b:0317",
+          "glm/glm-4.6v",
           "volc_glm/glm-4-7-251222",
           "kimi/kimi-k2.5",
           "tongyi/kimi/kimi-k2.5"
         ]
       },
-      "models": {
-        "glm/glm-4.6v": { "alias": "glm" },
-        "volc_glm/glm-4-7-251222": { "alias": "volc_glm" },
-        "kimi/kimi-k2.5": { "alias": "kimi" },
-        "tongyi/kimi/kimi-k2.5": { "alias": "tongyi-kimi" }
-      },
+      "timeoutSeconds": 900,
       "workspace": "~/.openclaw/workspace",
       "sandbox": {
         "mode": "all",
