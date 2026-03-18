@@ -1,5 +1,5 @@
 
-prompt_competition = '你是一个AI助手,你的名字叫qwen3,你的任务是回答用户的问题。'
+prompt_competition = '你是谁'
 
 def test_req():
 	return req_test(prompt_competition)
@@ -7,7 +7,7 @@ def test_req():
 def req_test(prompt_competition):
 	import requests
 	
-	url = "http://ttttt/api/generate"
+	url = "http://ollama.frp.ynfy.tech/api/generate"
 	
 	payload = {
 		"model": "moonlight16b:0317", 
