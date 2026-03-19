@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo
 
-VERSION="2026.3.12"
+VERSION="2026.3.13-1"
 REGISTRY="ccr.ccs.tencentyun.com/openclaw-jf"
 PROJECT_DIR="openclaw"
 

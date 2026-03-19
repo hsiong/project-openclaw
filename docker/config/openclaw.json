@@ -140,7 +140,7 @@
       "timeoutSeconds": 900,
       "workspace": "~/.openclaw/workspace",
       "sandbox": {
-        "mode": "all",
+        "mode": "non-main",
         "scope": "session",
         "workspaceAccess": "rw",
         "docker": {
@@ -148,7 +148,7 @@
           "workdir": "/workspace",
           "readOnlyRoot": false,
           "tmpfs": ["/tmp", "/var/tmp", "/run"],
-          "network": "none",
+          "network": "bridge",
           "user": "0:0",
           "capDrop": ["ALL"],
           "pidsLimit": 256,

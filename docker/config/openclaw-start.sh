@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo
 
-VERSION="2026.3.12"
+VERSION="2026.3.13-1"
 REGISTRY="ccr.ccs.tencentyun.com/openclaw-jf"
 USERNAME="100030931965"
 
@@ -40,10 +40,15 @@ docker rm -f "${APP_NAME}" 2>/dev/null || true
 echo "==> 创建目录"
 mkdir -p "${CONFIG_DIR}" "${LOG_DIR}"
 
-echo "==> 删除本地旧 openclaw 镜像（排除当前版本 ${VERSION}）"
+#echo "==> 删除本地旧 openclaw 镜像（排除当前版本 ${VERSION}）"
+#docker images "${REGISTRY}/openclaw" --format "{{.Repository}}:{{.Tag}}" \
+#  | grep -E '^[^ ]+:[^ ]+$' \
+#  | grep -v ":${VERSION}-dockercli$" \
+#  | xargs -r docker rmi -f || true
+
+echo "==> 删除本地旧 openclaw 镜像（当前版本 ${VERSION}）"
 docker images "${REGISTRY}/openclaw" --format "{{.Repository}}:{{.Tag}}" \
-  | grep -E '^[^ ]+:[^ ]+$' \
-  | grep -v ":${VERSION}-dockercli$" \
+  | grep ":${VERSION}-dockercli$" \
   | xargs -r docker rmi -f || true
 
 echo "==> 删除本地旧 sandbox 镜像（排除当前版本 ${VERSION}）"
