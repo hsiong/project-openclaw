@@ -1,0 +1,121 @@
+# syntax=docker/dockerfile:1.7
+
+ARG OPENCLAW_NODE_BOOKWORM_IMAGE="node:24-bookworm@sha256:3a09aa6354567619221ef6c45a5051b671f953f0a1924d1f819ffb236e520e6b"
+ARG OPENCLAW_NODE_BOOKWORM_DIGEST="sha256:3a09aa6354567619221ef6c45a5051b671f953f0a1924d1f819ffb236e520e6b"
+ARG OPENCLAW_NODE_BOOKWORM_SLIM_IMAGE="node:24-bookworm-slim@sha256:e8e2e91b1378f83c5b2dd15f0247f34110e2fe895f6ca7719dbb780f929368eb"
+ARG OPENCLAW_NODE_BOOKWORM_SLIM_DIGEST="sha256:e8e2e91b1378f83c5b2dd15f0247f34110e2fe895f6ca7719dbb780f929368eb"
+ARG OPENCLAW_VARIANT=default
+ARG APT_MIRROR_HOST=mirrors.tuna.tsinghua.edu.cn
+
+FROM ${OPENCLAW_NODE_BOOKWORM_IMAGE} AS base-default
+ARG OPENCLAW_NODE_BOOKWORM_DIGEST
+LABEL org.opencontainers.image.base.name="docker.io/library/node:24-bookworm" \
+  org.opencontainers.image.base.digest="${OPENCLAW_NODE_BOOKWORM_DIGEST}"
+
+FROM ${OPENCLAW_NODE_BOOKWORM_SLIM_IMAGE} AS base-slim
+ARG OPENCLAW_NODE_BOOKWORM_SLIM_DIGEST
+LABEL org.opencontainers.image.base.name="docker.io/library/node:24-bookworm-slim" \
+  org.opencontainers.image.base.digest="${OPENCLAW_NODE_BOOKWORM_SLIM_DIGEST}"
+
+FROM base-${OPENCLAW_VARIANT}
+ARG OPENCLAW_VARIANT
+ARG APT_MIRROR_HOST
+
+LABEL org.opencontainers.image.source="https://github.com/openclaw/openclaw" \
+  org.opencontainers.image.url="https://openclaw.ai" \
+  org.opencontainers.image.documentation="https://docs.openclaw.ai/install/docker" \
+  org.opencontainers.image.licenses="MIT" \
+  org.opencontainers.image.title="OpenClaw" \
+  org.opencontainers.image.description="OpenClaw gateway and CLI runtime container image"
+
+WORKDIR /app
+
+RUN set -eux; \
+    if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
+      sed -i \
+        -e "s|http://deb.debian.org/debian|https://${APT_MIRROR_HOST}/debian|g" \
+        -e "s|http://security.debian.org/debian-security|https://${APT_MIRROR_HOST}/debian-security|g" \
+        /etc/apt/sources.list.d/debian.sources; \
+    fi; \
+    if [ -f /etc/apt/sources.list ]; then \
+      sed -i \
+        -e "s|http://deb.debian.org/debian|https://${APT_MIRROR_HOST}/debian|g" \
+        -e "s|http://security.debian.org/debian-security|https://${APT_MIRROR_HOST}/debian-security|g" \
+        /etc/apt/sources.list; \
+    fi
+
+RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,id=openclaw-bookworm-apt-lists,target=/var/lib/apt,sharing=locked \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get upgrade -y --no-install-recommends && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      procps hostname curl git lsof openssl
+
+RUN chown node:node /app
+
+COPY --chown=node:node dist ./dist
+COPY --chown=node:node node_modules ./node_modules
+COPY --chown=node:node package.json .
+COPY --chown=node:node openclaw.mjs .
+COPY --chown=node:node extensions ./extensions
+COPY --chown=node:node skills ./skills
+COPY --chown=node:node docs ./docs
+
+ENV OPENCLAW_BUNDLED_PLUGINS_DIR=/app/extensions
+
+ARG OPENCLAW_INSTALL_PNPM_RUNTIME=""
+ENV COREPACK_HOME=/usr/local/share/corepack
+RUN install -d -m 0755 "$COREPACK_HOME" && \
+    if [ -n "$OPENCLAW_INSTALL_PNPM_RUNTIME" ]; then \
+      corepack enable && \
+      for attempt in 1 2 3 4 5; do \
+        if corepack prepare "$(node -p "require('./package.json').packageManager")" --activate; then \
+          break; \
+        fi; \
+        if [ "$attempt" -eq 5 ]; then \
+          exit 1; \
+        fi; \
+        sleep $((attempt * 2)); \
+      done; \
+    fi && \
+    chmod -R a+rX "$COREPACK_HOME"
+
+ARG OPENCLAW_DOCKER_APT_PACKAGES=""
+RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,id=openclaw-bookworm-apt-lists,target=/var/lib/apt,sharing=locked \
+    if [ -n "$OPENCLAW_DOCKER_APT_PACKAGES" ]; then \
+      apt-get update && \
+      DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends $OPENCLAW_DOCKER_APT_PACKAGES; \
+    fi
+
+ARG OPENCLAW_INSTALL_BROWSER=""
+RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,id=openclaw-bookworm-apt-lists,target=/var/lib/apt,sharing=locked \
+    if [ -n "$OPENCLAW_INSTALL_BROWSER" ]; then \
+      apt-get update && \
+      DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb && \
+      mkdir -p /home/node/.cache/ms-playwright && \
+      PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright \
+      node /app/node_modules/playwright-core/cli.js install --with-deps chromium && \
+      chown -R node:node /home/node/.cache/ms-playwright; \
+    fi
+
+ARG OPENCLAW_INSTALL_DOCKER_CLI=""
+RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,id=openclaw-bookworm-apt-lists,target=/var/lib/apt,sharing=locked \
+    if [ -n "$OPENCLAW_INSTALL_DOCKER_CLI" ]; then \
+      apt-get update && \
+      DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        docker.io; \
+    fi
+
+RUN ln -sf /app/openclaw.mjs /usr/local/bin/openclaw \
+ && chmod 755 /app/openclaw.mjs
+
+ENV NODE_ENV=production
+
+USER node
+
+HEALTHCHECK --interval=3m --timeout=10s --start-period=15s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node", "openclaw.mjs", "gateway", "--allow-unconfigured"]
