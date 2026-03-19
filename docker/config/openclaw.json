@@ -142,14 +142,14 @@
       "sandbox": {
         "mode": "all",
         "scope": "session",
-        "workspaceAccess": "none",
+        "workspaceAccess": "rw",
         "docker": {
           "image": "ccr.ccs.tencentyun.com/openclaw-jf/openclaw-sandbox:2026.3.12",
-          "workdir": "~",
-          "readOnlyRoot": true,
+          "workdir": "/workspace",
+          "readOnlyRoot": false,
           "tmpfs": ["/tmp", "/var/tmp", "/run"],
           "network": "none",
-          "user": "1000:1000",
+          "user": "0:0",
           "capDrop": ["ALL"],
           "pidsLimit": 256,
           "memory": "1g",

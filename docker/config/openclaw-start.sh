@@ -18,8 +18,8 @@ CONFIG_FILE="${CONFIG_DIR}/openclaw.json"
 echo "配置文件路径: ${CONFIG_FILE}"
 echo "==> 更新 openclaw.json 中的 sandbox 版本为 ${VERSION}"
 if [ -f "${CONFIG_FILE}" ]; then
-  sed -i -E "s#openclaw-sandbox:[0-9.]+#openclaw-sandbox:${VERSION}#g" "${CONFIG_FILE}"
-  sed -i -E "s#openclaw-sandbox-browser:[0-9.]+#openclaw-sandbox-browser:${VERSION}#g" "${CONFIG_FILE}"
+  sudo sed -i -E "s#openclaw-sandbox:[0-9.]+#openclaw-sandbox:${VERSION}#g" "${CONFIG_FILE}"
+  sudo sed -i -E "s#openclaw-sandbox-browser:[0-9.]+#openclaw-sandbox-browser:${VERSION}#g" "${CONFIG_FILE}"
 else
   echo "警告: ${CONFIG_FILE} 不存在，跳过版本替换"
 fi
@@ -58,11 +58,17 @@ docker images "${REGISTRY}/openclaw-sandbox-browser" --format "{{.Repository}}:{
   | grep -v ":${VERSION}$" \
   | xargs -r docker rmi -f || true
   
+  
+cd /home/ubuntu/backend/openclaw
+mkdir -p config node logs
+
 echo "直接把宿主机上的配置目录改成 root 拥有："
 sudo chown -R root:root /home/ubuntu/backend/openclaw/config
-sudo chmod 700 /home/ubuntu/backend/openclaw/config
+sudo chmod 755 /home/ubuntu/backend/openclaw/config
 sudo chmod 600 /home/ubuntu/backend/openclaw/config/secrets.json
-sudo chmod 644 /home/ubuntu/backend/openclaw/config/openclaw.json
+sudo chmod 755 /home/ubuntu/backend/openclaw/config/openclaw.json
+sudo setfacl -R -m u:ubuntu:rwX /home/ubuntu/backend/openclaw/config
+
 
 echo "==> 启动容器"
 docker run -d \
