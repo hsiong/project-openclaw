@@ -37,7 +37,7 @@
         ]
       },
       "ollama": {
-        "baseUrl": "http://127.0.0.1:11434",
+        "baseUrl": "http://ollama.xxxx",
         "apiKey": "ollama-local",
         "api": "ollama",
         "models": [
@@ -82,6 +82,20 @@
             },
             "contextWindow": 262144,
             "maxTokens": 10240
+          },
+          {
+            "id": "qwen3.5:27b",
+            "name": "Qwen 3.5 27B",
+            "reasoning": false,
+            "input": ["text", "image"],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 262144,
+            "maxTokens": 10240
           }
         ]
       }
@@ -112,9 +126,10 @@
     "defaults": {
       "imageModel": { "primary": "ollama/qwen3.5:9b" },
       "model": {
-        "primary":  "ollama/qwen3:14b-q4_K_M",
+        "primary":  "ollama/qwen3.5:9b",
         "fallbacks": [
-          "ollama/qwen3.5:9b",
+          "ollama/qwen3.5:27b",
+          "ollama/qwen3:14b-q4_K_M",
           "ollama/moonlight16b:0317",
           "glm/glm-4.6v",
           "volc_glm/glm-4-7-251222",
