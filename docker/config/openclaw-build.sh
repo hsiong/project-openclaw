@@ -137,7 +137,7 @@ echo "==> 构建 sandbox 镜像"
   ./scripts/sandbox-setup.sh
 )
 
-echo "==> 构建 sandbox-browser 镜像"
+echo "==> 构建 sandbox-browser 镜像; 构建 openclaw-sandbox-browser:bookworm-slim 时会显示详细构建日志"
 (
   cd "${SOURCE_DIR}"
   DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain ./scripts/sandbox-browser-setup.sh
