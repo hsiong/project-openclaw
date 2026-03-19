@@ -229,9 +229,69 @@
 
 
 
+# 常用命令
 
 
-# 其他
+
++ 自动显示token消耗
+
+```
+/usage tokens 
+```
+
++ 自动显示token并估算费用
+
+```
+/usage full
+```
+
+
+
+
+
+
+
+# 其他问题
+
+### 1.
+
+```
+{
+  "status": "error",
+  "tool": "read",
+  "error": "stat failed for /root/.openclaw/sandboxes/agent-main-main-6d9217fe/SOUL.md: moltbot-sandbox-fs: 2: cd: can't cd to /root/.openclaw/sandboxes/agent-main-main-6d9217fe"
+}
+```
+
+在 docker/config/openclaw.json 里把 readOnlyRoot 先改成 false
+
+
+
+### 2.
+
+```
+2026-03-19T06:52:46.256+00:00 [tools] read failed: Path escapes sandbox root (~/.openclaw/sandboxes/agent-main-main-6d9217fe): /app/skills/weather/SKILL.md
+2026-03-19T06:52:46.273+00:00 [tools] read failed: Path escapes sandbox root (~/.openclaw/sandboxes/agent-main-main-6d9217fe): /app/skills/healthcheck/SKILL.md
+2026-03-19T06:52:46.282+00:00 [tools] read failed: Path escapes sandbox root (~/.openclaw/sandboxes/agent-main-main-6d9217fe): /app/skills/skill-creator/SKILL.md
+
+```
+
+workspaceAccess: "none" 时，read 是 sandbox-rooted，只能看到 ~/.openclaw/sandboxes
+
+- rw 模式下 workspace skills 从 {workspace}/skills 读取
+
+  docker exec -it openclaw openclaw sandbox recreate --all --force
+  docker restart openclaw && docker logs -f openclaw
+
+
+
+### 3.
+
+
+
+
+
+
 
 ## Clawhub
 ### search 

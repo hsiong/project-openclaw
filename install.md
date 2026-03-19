@@ -203,24 +203,11 @@ vim /home/ubuntu/backend/openclaw/config/secrets.json
 
 
 
-
-
-```
-chmod 600 /home/ubuntu/backend/openclaw/config/secrets.json
-sudo chown 1000:1000 /home/ubuntu/backend/openclaw/config/secrets.json
-```
-
-
-
-
-
   但 workspaceAccess: "none" 时，OpenClaw 默认用 ~/.openclaw/sandboxes 作为 sandbox workspace root，官方文档就是这么写的。
   来源：
 
 ```
-cd /home/ubuntu/backend/openclaw
-mkdir config node logs
-sudo chown -R 1000:1000 /home/ubuntu/backend/openclaw/config /home/ubuntu/backend/openclaw/logs
+
 vim config/openclaw.json  
 
 ```
