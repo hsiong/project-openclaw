@@ -212,6 +212,11 @@ sudo chown 1000:1000 /home/ubuntu/backend/openclaw/config/secrets.json
 
 
 
+
+
+  但 workspaceAccess: "none" 时，OpenClaw 默认用 ~/.openclaw/sandboxes 作为 sandbox workspace root，官方文档就是这么写的。
+  来源：
+
 ```
 cd /home/ubuntu/backend/openclaw
 mkdir config node logs
@@ -231,6 +236,15 @@ vim config/openclaw.json
 
 
 # 第七步（启动 OpenClaw）
+
+
+
+```
+CONFIG_DIR="/home/ubuntu/backend/openclaw/config"
+-v "${CONFIG_DIR}:/root/.openclaw" 
+
+
+```
 
 直接运行容器：
 

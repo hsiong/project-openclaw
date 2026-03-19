@@ -145,7 +145,7 @@
         "workspaceAccess": "none",
         "docker": {
           "image": "ccr.ccs.tencentyun.com/openclaw-jf/openclaw-sandbox:2026.3.12",
-          "workdir": "/workspace",
+          "workdir": "~",
           "readOnlyRoot": true,
           "tmpfs": ["/tmp", "/var/tmp", "/run"],
           "network": "none",
