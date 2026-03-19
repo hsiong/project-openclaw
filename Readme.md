@@ -245,6 +245,25 @@
 /usage full
 ```
 
++ clawhub list
+
+```
+openclaw skills list
+```
+
++ 安装 skill
+
+```
+clawhub install <skill-slug> --workdir /root/.openclaw/workspace --no-input
+```
+
++ 重建沙箱
+
+```
+docker exec -it openclaw openclaw sandbox recreate --all --force
+docker restart openclaw && docker logs -f openclaw
+```
+
 
 
 
@@ -280,12 +299,46 @@ workspaceAccess: "none" 时，read 是 sandbox-rooted，只能看到 ~/.openclaw
 
 - rw 模式下 workspace skills 从 {workspace}/skills 读取
 
-  docker exec -it openclaw openclaw sandbox recreate --all --force
-  docker restart openclaw && docker logs -f openclaw
 
 
 
-### 3.
+### 3. 
+
+```
+{
+  "status": "error",
+  "tool": "read",
+  "error": "Path escapes sandbox root (~/.openclaw/workspace): /app/skills/weather/SKILL.md"
+}
+```
+
+
+
+
+
+### 4. 
+
+```
+不能联网
+```
+
+"network": "bridge",
+
+
+
+### 5
+
+```
+不能自动安装插件
+```
+
+  "sandbox": {
+    "mode": "non-main",
+
+  - WebChat 里的 main 会话不进 sandbox
+  - 主会话可以直接访问主容器里的 /app/skills
+  - 也能直接联网执行 clawhub install
+  - 需要隔离的非 main 会话仍然走 sandbox
 
 
 
